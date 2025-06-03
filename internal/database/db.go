@@ -5,7 +5,7 @@ import (
 
 	// Импортируйте ваш пакет userService
 
-	"github.com/your-org/tasks-service/internal/taskService"
+	"github.com/arkad0912/tasks-service/internal/taskService"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
