@@ -5,6 +5,7 @@ import (
 
 	// Импортируйте ваш пакет userService
 
+	"github.com/your-org/tasks-service/internal/taskService"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -19,15 +20,15 @@ func InitDB() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// // Удаляем таблицу если существует
-	// if err := DB.Migrator().DropTable(&taskService.User{}); err != nil {
-	// 	log.Println("Warning: could not drop table:", err)
-	// }
+	// Удаляем таблицу если существует
+	if err := DB.Migrator().DropTable(&taskService.Task{}); err != nil {
+		log.Println("Warning: could not drop table:", err)
+	}
 
-	// // Создаем таблицу заново
-	// if err := DB.AutoMigrate(&taskService.User{}); err != nil {
-	// 	log.Fatal("Failed to auto-migrate models:", err)
-	// }
+	// Создаем таблицу заново
+	if err := DB.AutoMigrate(&taskService.Task{}); err != nil {
+		log.Fatal("Failed to auto-migrate models:", err)
+	}
 
 	log.Println("Database migration completed successfully")
 }
