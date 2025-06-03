@@ -1,4 +1,4 @@
-module github.com/your-org/tasks-service
+module github.com/arkad0912/tasks-service
 
 go 1.23.5
 
