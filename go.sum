@@ -1,5 +1,9 @@
 github.com/arkad0912/project-protos v1.0.2 h1:ILe9gR/lRVOmFlxz29iLLHiotmN/xL1XOI7iE6pVM3s=
 github.com/arkad0912/project-protos v1.0.2/go.mod h1:++7L8MbhDrTeJs+xszU+dktEQzAXq8mUb468aH3Y7LM=
+github.com/arkad0912/project-protos v1.0.3 h1:HWbmpxt14RejMhFTZTejQO8d0IWXEHIUwmfGl06NyGA=
+github.com/arkad0912/project-protos v1.0.3/go.mod h1:++7L8MbhDrTeJs+xszU+dktEQzAXq8mUb468aH3Y7LM=
+github.com/arkad0912/project-protos v1.0.4 h1:Cq93JaM0hwzp4lLvoW/7prp4G+6I5aHYHlOYfgFjxj8=
+github.com/arkad0912/project-protos v1.0.4/go.mod h1:++7L8MbhDrTeJs+xszU+dktEQzAXq8mUb468aH3Y7LM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

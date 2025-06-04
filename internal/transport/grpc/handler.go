@@ -24,17 +24,24 @@ func NewHandler(svc *taskService.TaskService, uc userpb.UserServiceClient) *Hand
 }
 
 func (h *Handler) CreateTask(ctx context.Context, req *taskpb.CreateTaskRequest) (*taskpb.CreateTaskResponse, error) {
-	// Проверяем существование пользователя
-	if _, err := h.userClient.GetUser(ctx, &userpb.GetUserRequest{Id: req.UserId}); err != nil {
-		return nil, status.Errorf(codes.NotFound, "user %d not found: %v", req.UserId, err)
+	// 1. Проверяем существование пользователя
+	userResp, err := h.userClient.GetUser(ctx, &userpb.GetUserRequest{
+		Id: req.GetUserId(),
+	})
+
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+		return nil, status.Error(codes.Internal, "failed to verify user")
 	}
 
-	// Создаем задачу
+	// 2. Создаём задачу
 	task, err := h.svc.CreateTask(taskService.Task{
-		Task:   req.Title,
-		UserID: req.UserId,
-		IsDone: false,
+		Task:   req.GetTitle(),
+		UserID: uint(req.GetUserId()),
 	})
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -42,15 +49,59 @@ func (h *Handler) CreateTask(ctx context.Context, req *taskpb.CreateTaskRequest)
 	return &taskpb.CreateTaskResponse{
 		Task: &taskpb.Task{
 			Id:     uint32(task.ID),
-			UserId: task.UserID,
 			Title:  task.Task,
-			IsDone: task.IsDone,
+			UserId: userResp.GetUser().GetId(), // Используем ID из ответа
 		},
 	}, nil
 }
 
-func (h *Handler) GetTask(ctx context.Context, req *taskpb.GetTaskRequest) (*taskpb.Task, error) {
-	// Реализация аналогична CreateTask
+func (h *Handler) GetTask(ctx context.Context, req *taskpb.GetTaskRequest) (*taskpb.GetTaskResponse, error) {
+	task, err := h.svc.GetTaskByID(uint(req.GetId()))
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "task not found")
+	}
+
+	return &taskpb.GetTaskResponse{
+		Task: &taskpb.Task{
+			Id:     uint32(task.ID),
+			Title:  task.Task,
+			UserId: uint32(task.UserID),
+		},
+	}, nil
+}
+
+func (h *Handler) UpdateTask(ctx context.Context, req *taskpb.UpdateTaskRequest) (*taskpb.UpdateTaskResponse, error) {
+	// Получаем существующую задачу
+	existingTask, err := h.svc.GetTaskByID(uint(req.GetId()))
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "task not found")
+	}
+
+	// Обновляем только title (если он передан)
+	if req.GetTitle() != "" {
+		existingTask.Task = req.GetTitle()
+	}
+
+	// Сохраняем обновленную задачу
+	updatedTask, err := h.svc.UpdateTaskByID(uint(req.GetId()), existingTask)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &taskpb.UpdateTaskResponse{
+		Task: &taskpb.Task{
+			Id:    uint32(updatedTask.ID),
+			Title: updatedTask.Task,
+		},
+	}, nil
+}
+
+func (h *Handler) DeleteTask(ctx context.Context, req *taskpb.DeleteTaskRequest) (*taskpb.DeleteTaskResponse, error) {
+	err := h.svc.DeleteTaskByID(uint(req.GetId()))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &taskpb.DeleteTaskResponse{Success: true}, nil
 }
 
 func (h *Handler) ListTasks(ctx context.Context, req *taskpb.ListTasksRequest) (*taskpb.ListTasksResponse, error) {
@@ -59,45 +110,38 @@ func (h *Handler) ListTasks(ctx context.Context, req *taskpb.ListTasksRequest) (
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	var pbTasks []*taskpb.Task
+	pbTasks := make([]*taskpb.Task, 0, len(tasks))
 	for _, t := range tasks {
 		pbTasks = append(pbTasks, &taskpb.Task{
 			Id:     uint32(t.ID),
-			UserId: t.UserID,
 			Title:  t.Task,
-			IsDone: t.IsDone,
+			UserId: uint32(t.UserID),
 		})
 	}
 
-	return &taskpb.ListTasksResponse{Tasks: pbTasks}, nil
+	return &taskpb.ListTasksResponse{
+		Tasks:      pbTasks,
+		TotalCount: uint32(len(tasks)),
+	}, nil
 }
 
-func (h *Handler) ListTasksByUser(ctx context.Context, req *taskpb.ListTasksByUserRequest) (*taskpb.ListTasksResponse, error) {
-	tasks, err := h.svc.GetTasksByUserID(req.UserId)
+func (h *Handler) ListTasksByUser(ctx context.Context, req *taskpb.ListTasksByUserRequest) (*taskpb.ListTasksByUserResponse, error) {
+	tasks, err := h.svc.GetTasksByUserID(uint(req.GetUserId()))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	var pbTasks []*taskpb.Task
+	pbTasks := make([]*taskpb.Task, 0, len(tasks))
 	for _, t := range tasks {
 		pbTasks = append(pbTasks, &taskpb.Task{
 			Id:     uint32(t.ID),
-			UserId: t.UserID,
 			Title:  t.Task,
-			IsDone: t.IsDone,
+			UserId: uint32(t.UserID),
 		})
 	}
 
-	return &taskpb.ListTasksResponse{Tasks: pbTasks}, nil
-}
-
-func (h *Handler) UpdateTask(ctx context.Context, req *taskpb.UpdateTaskRequest) (*taskpb.Task, error) {
-	// Реализация аналогична CreateTask
-}
-
-func (h *Handler) DeleteTask(ctx context.Context, req *taskpb.DeleteTaskRequest) (*taskpb.DeleteTaskResponse, error) {
-	if err := h.svc.DeleteTaskByID(req.Id); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	return &taskpb.DeleteTaskResponse{Success: true}, nil
+	return &taskpb.ListTasksByUserResponse{
+		Tasks:      pbTasks,
+		TotalCount: uint32(len(tasks)),
+	}, nil
 }

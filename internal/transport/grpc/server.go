@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 
+	taskpb "github.com/arkad0912/project-protos/proto/task"
 	userpb "github.com/arkad0912/project-protos/proto/user"
 	"github.com/arkad0912/tasks-service/internal/taskService"
 	"google.golang.org/grpc"
@@ -18,7 +19,7 @@ func RunGRPC(svc *taskService.TaskService, uc userpb.UserServiceClient) error {
 
 	srv := grpc.NewServer()
 	handler := NewHandler(svc, uc)
-	taskpb.RegisterTaskServiceServer(srv, handler)
+	taskpb.RegisterTaskServiceServer(srv, handler) // Регистрируем все методы
 
 	log.Printf("Tasks gRPC server started on :50052")
 	return srv.Serve(lis)

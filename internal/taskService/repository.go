@@ -1,8 +1,6 @@
 package taskService
 
-import (
-	"gorm.io/gorm"
-)
+import "gorm.io/gorm"
 
 type TaskRepository interface {
 	CreateTask(task Task) (Task, error)
@@ -10,6 +8,7 @@ type TaskRepository interface {
 	GetTasksByUserID(userID uint) ([]Task, error)
 	UpdateTaskByID(id uint, task Task) (Task, error)
 	DeleteTaskByID(id uint) error
+	GetTaskByID(id uint) (Task, error)
 }
 
 type taskRepository struct {
@@ -54,4 +53,9 @@ func (r *taskRepository) UpdateTaskByID(id uint, task Task) (Task, error) {
 
 func (r *taskRepository) DeleteTaskByID(id uint) error {
 	return r.db.Delete(&Task{}, id).Error
+}
+func (r *taskRepository) GetTaskByID(id uint) (Task, error) {
+	var task Task
+	err := r.db.First(&task, id).Error // Ищем по первичному ключу (id)
+	return task, err
 }
