@@ -90,8 +90,9 @@ func (h *Handler) UpdateTask(ctx context.Context, req *taskpb.UpdateTaskRequest)
 
 	return &taskpb.UpdateTaskResponse{
 		Task: &taskpb.Task{
-			Id:    uint32(updatedTask.ID),
-			Title: updatedTask.Task,
+			Id:     uint32(updatedTask.ID),
+			Title:  updatedTask.Task,
+			UserId: uint32(updatedTask.UserID),
 		},
 	}, nil
 }
